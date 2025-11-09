@@ -14,45 +14,25 @@ from datetime import datetime
 import csv
 import argparse
 
+def reply_to_values(response):
+    response_str = response.content
+    values_list = response_str.split(",")
+    return values_list
 
-def promptize_tuple(word_tuple):
-    # return f"[INST]\n1. {word_tuple[0].upper()}\n2. {word_tuple[1].upper()}\n3. {word_tuple[2].upper()}\n4. {word_tuple[3].upper()}\n[/INST]"
-    return f"0 - {word_tuple[0].upper()},\n1 - {word_tuple[1].upper()},\n2 - {word_tuple[2].upper()},\n3 - {word_tuple[3].upper()}\n"
-
-
-def annotate(tup, history=False):
-    prompt_tuple = promptize_tuple(tup)
-    # print(prompt_tuple)
+def annotate(metaphor, history=False):
     if history:
         request = {
             "chat_history": chat_history,
-            "input": prompt_tuple,
+            "input": metaphor,
         }
     else:
         request = {
-            "input": prompt_tuple,
+            "input": metaphor,
         }
 
     response = chain.invoke(request)
 
     return response
-
-
-def index_to_words(tup, reply):
-    try:
-        idx_b, idx_w = reply.split(",", 1)
-        idx_b = int(idx_b.strip()[-1])
-        idx_w = int(idx_w.strip()[0])
-        best = tup[idx_b]
-        worst = tup[idx_w]
-    except:
-        idx_b = None
-        idx_w = None
-        best = None
-        worst = None
-
-    return best, worst, idx_b, idx_w
-
 
 def write_out(out_file_name, results_dict):
     out_annotation_file = Path(str(out_file_name.absolute()) + ".csv")
@@ -163,66 +143,56 @@ if __name__ == "__main__":
     # INIZIA MODIFICA DA QUI
 
     metaphors_file = Path(DATA_PATH, args.metaphors_file)
-    with open(metaphors_file, "r") as metaphors:
-        word_tuples = json.load(word_tuples)
+    df_metaphors = pd.read_csv(metaphors_file)
+    metaphor_list = df_metaphors["Metaphor"]
+    print(type(metaphor_list))
 
-    for tuple_list_type in word_tuples.keys():
-        for tuple_list_number in list(word_tuples[tuple_list_type].keys()):
-            list_name = "_".join([tuple_list_type, tuple_list_number])
-            tuple_list = word_tuples[tuple_list_type][tuple_list_number]
-            print(list_name.upper(), "TOTAL TUPLES:", len(tuple_list))
+    for n in range(RATERS):
+        rater_time = datetime.now()
+        rater = f"rater_{n + 1}"
+        print("rater: ", rater)
 
-            for n in range(RATERS):
-                rater_time = datetime.now()
-                rater = f"{list_name}_rater_{n + 1}"
-                
-                print(rater)
+        llm = Ollama(model=MODEL, num_predict=48)  # , temperature=0.2)
+        if KEEP_HISTORY:
+            chat_history = []
+            prompt_template = ChatPromptTemplate.from_messages(
+                [
+                    ("system", TASK_INSTRUCTIONS),
+                    MessagesPlaceholder(variable_name="chat_history"),
+                    ("user", "{input}"),
+                ]
+            )
+        else:
+            prompt_template = ChatPromptTemplate.from_messages(
+                [
+                    ("system", TASK_INSTRUCTIONS),
+                    ("user", "{input}"),
+                ]
+            )
+        chain = prompt_template | llm
 
-                llm = Ollama(model=MODEL, num_predict=48)  # , temperature=0.2)
-                if KEEP_HISTORY:
-                    chat_history = []
-                    prompt_template = ChatPromptTemplate.from_messages(
-                        [
-                            ("system", TASK_INSTRUCTIONS),
-                            MessagesPlaceholder(variable_name="chat_history"),
-                            ("user", "{input}"),
-                        ]
-                    )
-                else:
-                    prompt_template = ChatPromptTemplate.from_messages(
-                        [
-                            ("system", TASK_INSTRUCTIONS),
-                            ("user", "{input}"),
-                        ]
-                    )
-                chain = prompt_template | llm
+        for idx, metaphor in list(enumerate(metaphor_list)):
+            print(rater, idx + 1, "of", len(metaphor_list))
 
-                for idx, tup in list(enumerate(tuple_list)):
-                    print(rater, idx + 1, "of", len(tuple_list))
+            reply = annotate(metaphor, history=KEEP_HISTORY)
+            values=reply_to_values(reply)
 
-                    reply = annotate(tup, history=KEEP_HISTORY)
-                    best, worst, idx_b, idx_w = index_to_words(tup, reply)
-                    # print(best, worst)
+            if "MB" in args.prompt:
 
-                    row = {
-                        "list": list_name,
-                        "annotator": rater,
-                        "Item1": tup[0],
-                        "Item2": tup[1],
-                        "Item3": tup[2],
-                        "Item4": tup[3],
-                        "BestItem": best,
-                        "WorstItem": worst,
-                        "explanation": reply,
-                        "model": MODEL,
-                    }
-                    if KEEP_HISTORY and best is not None and worst is not None:
-                        chat_history.append(HumanMessage(content=promptize_tuple(tup)))
-                        chat_history.append(AIMessage(content=reply))
+                row = {
+                    "Annotator": rater,
+                    "Metaphor": metaphor,
+                    "FamMetabody_Met" : values[0],
+                    "SensMetabody_Met" : values[1],
+                    "BodyMetabody_Met" : values[2]
+                }
+            if KEEP_HISTORY and best is not None and worst is not None:
+                chat_history.append(HumanMessage(content=promptize_tuple(tup)))
+                chat_history.append(AIMessage(content=reply))
 
-                    write_out(out_annotation_file, row)
+            write_out(out_annotation_file, row)
 
-                print(f"{rater} completed in: {datetime.now() - rater_time}")
+        print(f"{rater} completed in: {datetime.now() - rater_time}")
 
     with open(str(out_annotation_file.absolute()) + "_CONFIG.json", "w") as f:
         json.dump(run_config, f)

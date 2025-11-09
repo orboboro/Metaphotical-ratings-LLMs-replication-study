@@ -5,4 +5,4 @@ Attenzione: puoi rispondere con un qualsiasi numero intero tra 0 e 7 compresi, m
 Di ogni espressione metaforica dovrai valutare la familiarità, la sensatezza e la corporalità.
 Con familiarità si intende quanto la metafora ti suona familiare, cioè quanto pensi di aver sentito o usato la metafora in quella forma o in forme simili.
 
-Riporta i giudizi quantitativi in questo specifico formato: "familiarità:punteggio_familiarità,sensatezza: punteggio_sensatezza,corporalità:punteggio_corporalità". Mi raccomando: rispondi esclusivamente usando questo schema e non cambiare l'ordine.
+Riporta i punteggi secondo questo schema specifico: "punteggio_familiarità,punteggio_sensatezza,punteggio_corporeità". Mi raccomando: separa i punteggi SOLO con una virgola e non cambiare l'ordine dello schema.
