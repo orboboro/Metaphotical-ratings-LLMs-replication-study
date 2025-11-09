@@ -1,0 +1,15 @@
+annotator,metaphor,familiarity,meaningfulness,bodey relatedness
+rater_1,Quell'alito Ã¨ una fogna,3,6,2
+rater_1,Quell'uragano è un carrarmato,5,7,4
+rater_1,Quella borsa è un macigno,"Quell'alito è una fogna:
+1",6,"3
+
+Quell'uragano è un carrarmato:
+2"
+rater_1,Quella città è una giungla,"Quella città è una giungla:
+4",7,5
+rater_1,Quelle guance sono pesche,"Quella città è una giungla:
+4",7,"5
+
+Quelle guance sono pesche:
+6"

@@ -3,5 +3,5 @@ Dovrai assegnare un punteggio da 1 a 7 a ogni caratteristica di ciascuna espress
 Con familiarità si intende quanto la metafora ti suona familiare, cioè quanto pensi di aver sentito o usato la metafora in quella forma o in forme simili (1=per niente familiare, 7=molto familiare).
 Con sensatezza si intende quanto pensi che la metafora sia sensata o abbia un significato (1=per niente sensata, 7=molto sensata).
 Con corporalità si intende quanto pensi che sia stretta la relazione tra la metafora e le parti del corpo, o quanto pensi che sia elevata l'inclusione di parti del corpo o aspetti motori nella metafora (1=per niente elevata, 7=molto elevata).
-Attenzione: puoi rispondere con un qualsiasi numero intero compreso tra 1 e 7 inclusi, ma devi rispondere con uno ed un solo numero per ogni caratteristica e non devi usare nessuna parola.
-Riporta i punteggi secondo questo schema specifico: "punteggio_familiarità, punteggio_sensatezza, punteggio_corporeità". Mi raccomando: separa i punteggi solo con una virgola e non cambiare l'ordine dello schema.
+Attenzione: puoi rispondere con un qualsiasi numero compreso tra 1 e 7 inclusi, ma devi rispondere con uno ed un solo numero per ogni caratteristica e non devi assolutamente usare nessuna parola.
+Riporta i punteggi in questo ordine specifico: per primo il punteggio di familiarità, per secondo il punteggio di sensatezza, per terzo il punteggio di corporeità. Mi raccomando: non cambiare l'ordine e separa i punteggi SOLO con ", ".

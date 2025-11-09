@@ -15,8 +15,7 @@ import csv
 import argparse
 
 def reply_to_values(response):
-    response_str = response.content
-    values_list = response_str.split(", ")
+    values_list = response.split(", ")
     return values_list
 
 def annotate(metaphor, history=False):
@@ -35,9 +34,9 @@ def annotate(metaphor, history=False):
     return response
 
 def write_out(out_file_name, results_dict):
-    out_annotation_file = Path(str(out_file_name.absolute()) + ".csv")
+    out_annotation_file = Path(str(out_file_name.absolute()))
     if not out_annotation_file.exists():
-        with out_annotation_file.open("w", newline="") as f:
+        with out_annotation_file.open("w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=results_dict.keys())
             writer.writeheader()
             writer.writerow(results_dict)
@@ -52,7 +51,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="Metaphors Ratings Script with llms, langchain and Ollama API",
-        usage="python langchain_met_ratings.py --model 'llama3' --metaphors_file new_MB.csv --prompt MB_task_instructions.txt --history",
+        usage="python langchain_met_ratings.py --model 'llama3' --metaphors_file new_MB.csv --prompt MB_task_instructions.txt --history --test",
     )
 
     parser.add_argument(
@@ -85,7 +84,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--testing",
+        "--test",
         action="store_true",
         help="Run in testing mode",
     )
@@ -101,17 +100,17 @@ if __name__ == "__main__":
 
     TASK_INSTRUCTIONS = open(args.prompt, "r").read()
 
-    if args.testing:
-        TESTING = True
+    if args.test:
+        TEST = True
     else:
-        TESTING = False
+        TEST = False
 
-    DATA_PATH = "../data/new_datasets/" + str(args.metaphors_file)
+    DATA_PATH = "data/new_datasets/"
     RATERS = args.raters
 
     model_name = MODEL.replace(":", "-")
-    if TESTING:
-        out_file_name = "_TESTING_met_ratings_llm-langchain_"
+    if TEST:
+        out_file_name = "_TEST_met_ratings_llm-langchain_"
     else:
         out_file_name = "met_ratings_llm-langchain_"
 
@@ -125,8 +124,8 @@ if __name__ == "__main__":
         out_file_name
         + model_name
         + "_"
-        + str(start_time.isoformat().replace(":", "-").split(".")[0]),
-        # + ".csv",
+        + str(start_time.isoformat().replace(":", "-").split(".")[0])
+        + ".csv"
     )
 
     print(out_annotation_file)
@@ -140,8 +139,10 @@ if __name__ == "__main__":
         "prompt": TASK_INSTRUCTIONS,
     }
 
-    metaphors_file = Path(DATA_PATH)
-    df_metaphors = pd.read_csv(metaphors_file)
+    metaphors_file = Path(DATA_PATH, str(args.metaphors_file))
+    df_metaphors = pd.read_csv(metaphors_file, encoding="utf-8")
+    if args.test:
+        df_metaphors=df_metaphors[:5]
     metaphor_list = df_metaphors["Metaphor"]
     print(type(metaphor_list))
 
@@ -173,7 +174,7 @@ if __name__ == "__main__":
             print(rater, idx + 1, "of", len(metaphor_list))
 
             reply = annotate(metaphor, history=KEEP_HISTORY)
-            print(reply.content)
+            print(type(reply))
             values=reply_to_values(reply)
             print(values)
 
