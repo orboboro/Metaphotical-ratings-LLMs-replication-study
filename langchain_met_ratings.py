@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="Metaphors Ratings Script with llms, langchain and Ollama API",
-        usage="python langchain_met_ratings.py --model 'gemma3:1b' --metaphors_file new_MB.csv --prompt MB_task_instructions.txt --test",
+        usage="python langchain_met_ratings.py --model 'gemma3:1b' --metaphors_file new_MB.csv --prompt MB_task_instructions.txt --history --test",
     )
 
     parser.add_argument(
