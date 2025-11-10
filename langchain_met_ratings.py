@@ -189,7 +189,7 @@ if __name__ == "__main__":
                     "metaphor": metaphor,
                     "familiarity" : int(values[0]),
                     "meaningfulness" : int(values[1]),
-                    "bodey relatedness" : int(values[2])
+                    "body relatedness" : int(values[2])
                 }
 
 #################################################################
