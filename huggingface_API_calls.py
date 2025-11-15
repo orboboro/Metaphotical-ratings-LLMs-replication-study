@@ -25,8 +25,17 @@ def write_out(out_file_name, results_dict):
             writer = csv.DictWriter(f, fieldnames=results_dict.keys())
             writer.writerow(results_dict)
 
+def track_conversation(out_file_name, conversation):
+    out_annotation_file = Path(str(out_file_name.absolute()))
+    if not out_annotation_file.exists():
+        with out_annotation_file.open("w", encoding="utf-8", newline="") as f:
+            f.write(str(conversation + "\n\n"))
+    else:
+        with out_annotation_file.open("a", encoding="utf-8", newline="") as f:
+            f.write(str(conversation + "\n\n"))
 
-if __name__ == "__main__":
+def main():
+
     start_time = datetime.now()
 
     parser = argparse.ArgumentParser(
@@ -37,14 +46,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--metaphors_file",
         type=Path,
-        help="study to replicate"
+        help="Target study for replication"
     )
 
     parser.add_argument(
         "--model",
         type=str,
         required=True,
-        default="mistral:instruct",
         help="Model name",
     )
     parser.add_argument(
@@ -54,13 +62,16 @@ if __name__ == "__main__":
         help="Path to data",
     )
 
-    parser.add_argument("--history", action="store_true", help="Keep history")
+    parser.add_argument(
+        "--history",
+        action="store_true",
+        help="Keep history")
 
     parser.add_argument(
         "--raters",
         type=int,
         default=1,
-        help="number of raters to annotate each metaphor",
+        help="Number of raters to annotate each metaphor",
     )
 
     parser.add_argument(
@@ -115,7 +126,7 @@ if __name__ == "__main__":
     run_config = {
         "time": str(start_time.isoformat().replace(":", "-").split(".")[0]),
         "n_raters": RATERS,
-        "method": "langchain-ollama",
+        "method": "API calls with huggingface_hub",
         "model": MODEL,
         "keep_history": KEEP_HISTORY,
         "prompt": TASK_INSTRUCTIONS,
@@ -138,14 +149,12 @@ if __name__ == "__main__":
             {
                 "role": "system",
                 "content": [{"type": "text", "text": TASK_INSTRUCTIONS}]
-                ,
                 },
             {
-                "role": "user",
+                "role" : "assistant",
                 "content": [{"type": "text", "text": ""}]
                 }
         ]
-
 
         for idx, metaphor in list(enumerate(metaphor_list)):
             print(rater, idx + 1, "of", len(metaphor_list))
@@ -153,22 +162,27 @@ if __name__ == "__main__":
             client = InferenceClient(api_key=os.environ["HF_TOKEN"], provider="nebius")
 
             conversation[-1]["content"][0]["text"] = metaphor
+
             completion = client.chat.completions.create(
                 model=MODEL,
                 messages=conversation
                 )
 
             reply = completion.choices[0].message.content # content è un attributo dell'oggetto ChatCompletionOutputMessage
-            print("output: ", reply, "\n")
+            print("output: ", reply)
 
             if KEEP_HISTORY:
 
                 conversation.append({"role" : "assistant", "content": [{"type": "text", "text": reply}]})
-                conversation.append({"role" : "user", "content": [{"type": "text", "text": ""}]})
-                print("Conversation so far: ", conversation, "\n")
+                conversation.append({"role" : "assistant", "content": [{"type": "text", "text": ""}]})
+
+            track_conversation(out_annotation_file.absolute() + "_CONVERSATION", conversation)
 
             values=reply_to_values(reply)
             print("values: ", values, "\n")
+
+            if idx == len(metaphor_list) - 1:
+                print("CONVERSATION:\n", conversation)
 
             if "MB" in args.prompt:
 
@@ -208,8 +222,6 @@ if __name__ == "__main__":
                     "meaningfulness" : values[1],
                 }
 
-############################################################################
-
             write_out(out_annotation_file, row)
 
         print(f"{rater} completed in: {datetime.now() - rater_time}")
@@ -218,3 +230,12 @@ if __name__ == "__main__":
         json.dump(run_config, f)
 
     print("Metaphor rating completed in: {}".format(datetime.now() - start_time))
+
+if __name__ == "__main__": # La variabile speciale __name__ viene inizializzata uguale a "__main__" quando un file python viene eseguito
+    main()                 # direttamente. Dunque la condizione __name__ == "__main__ è rispettata e quindi il contenuto delle funzione
+                            # main viene eseguito. invece, se il file .py viene importato in un altro file, il suo contenuto non verrà
+                            # eseguito, perché dal momento che il file non è eseguito direttamente, __name__ non sarà uguale alla stringa
+                            # "__main__", ma al nome stesso del file .py. Insomma questa condizione serve a far sì che una funzione
+                            # contenuta in un file venga eseguita solo quando è chiamata firettamente da terminale e nonquando è importata
+                            # come modulo da altri file. 
+                            # Reference: https://www.youtube.com/watch?v=sugvnHA7ElY
