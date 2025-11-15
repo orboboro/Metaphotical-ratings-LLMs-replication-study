@@ -26,13 +26,13 @@ def write_out(out_file_name, results_dict):
             writer.writerow(results_dict)
 
 def track_conversation(out_file_name, conversation):
-    out_annotation_file = Path(str(out_file_name.absolute()))
+    out_annotation_file = Path(str(out_file_name.absolute()) + "_CONVERSATION")
     if not out_annotation_file.exists():
         with out_annotation_file.open("w", encoding="utf-8", newline="") as f:
-            f.write(str(conversation + "\n\n"))
+            f.write(str(conversation) + "\n\n")
     else:
         with out_annotation_file.open("a", encoding="utf-8", newline="") as f:
-            f.write(str(conversation + "\n\n"))
+            f.write(str(conversation) + "\n\n")
 
 def main():
 
@@ -151,7 +151,7 @@ def main():
                 "content": [{"type": "text", "text": TASK_INSTRUCTIONS}]
                 },
             {
-                "role" : "assistant",
+                "role" : "user",
                 "content": [{"type": "text", "text": ""}]
                 }
         ]
@@ -174,9 +174,9 @@ def main():
             if KEEP_HISTORY:
 
                 conversation.append({"role" : "assistant", "content": [{"type": "text", "text": reply}]})
-                conversation.append({"role" : "assistant", "content": [{"type": "text", "text": ""}]})
+                conversation.append({"role" : "user", "content": [{"type": "text", "text": ""}]})
 
-            track_conversation(out_annotation_file.absolute() + "_CONVERSATION", conversation)
+            track_conversation(out_annotation_file, conversation)
 
             values=reply_to_values(reply)
             print("values: ", values, "\n")
