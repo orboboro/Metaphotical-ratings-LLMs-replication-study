@@ -94,7 +94,6 @@ def main():
     )
 
     run_config = {
-        "time": str(start_time.isoformat().replace(":", "-").split(".")[0]),
         "n_raters": RATERS,
         "method": "API calls with huggingface_hub",
         "model": MODEL,
@@ -103,6 +102,9 @@ def main():
 
     dataset = Path(DATA_PATH, "human_datasets", DATASET)
     dataset_df = pd.read_csv(dataset, encoding="utf-8")
+
+    if TEST:
+        dataset_df = dataset_df[:1]
 
     checkpoint_file = Path(TRACKING_DATA_PATH, "checkpoint.csv")
     rater_file = Path(TRACKING_DATA_PATH, "current_rater.txt")
@@ -120,10 +122,6 @@ def main():
 
     if not checkpoint_file.exists():
         dataset_df.to_csv(checkpoint_file, index = False)
-
-        if TEST:
-            dataset_df = dataset_df[:1]
-
         checkpoint_df = pd.read_csv(checkpoint_file, encoding="utf-8")
 
         with open(rater_file, "w", encoding = "utf-8") as f:
@@ -142,7 +140,7 @@ def main():
             with open(rater_file, "r", encoding = "utf-8") as f:
                 rater = f.read().strip()
                 
-            with open(f"rater_{rater}_conversation_" + model_name + ".txt", "r", encoding = "utf-8")as f:
+            with open(f"rater_{rater}_conversation_" + model_name + ".txt", "r", encoding = "utf-8") as f:
                 content = f.read()
                 conversation = ast.literal_eval(content)
 
@@ -153,8 +151,6 @@ def main():
 
         metaphors_list = checkpoint_df["Metaphor"]
         structures_list = checkpoint_df["Met_structure"]
-
-        rater_time = datetime.now()
 
         for idx, metaphor in list(enumerate(metaphors_list)):
             
@@ -229,14 +225,14 @@ def main():
 
             write_out(out_annotation_file, row)
 
-        print(f"{rater} completed in: {datetime.now() - rater_time}")
+        print(f"{rater} rated all metaphors")
 
     else:
 
-        with open(str(out_annotation_file.absolute()) + "_CONFIG.json", "w") as f:
+        with open(str(out_annotation_file) + "_CONFIG.json", "w") as f:
             json.dump(run_config, f)
 
-        print("Metaphor rating completed in: {}".format(datetime.now() - start_time))
+        print("Metaphor rating completed with success")
 
 if __name__ == "__main__": # La variabile speciale __name__ viene inizializzata uguale a "__main__" quando un file python viene eseguito
     main()                 # direttamente. Dunque la condizione __name__ == "__main__ è rispettata e quindi il contenuto delle funzione
