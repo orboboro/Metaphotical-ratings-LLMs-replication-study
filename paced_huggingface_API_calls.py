@@ -133,13 +133,13 @@ def main():
         if checkpoint_df.empty:
             dataset_df.to_csv(checkpoint_file, index = False)
 
-            with open(rater_file, "r+", encoding = "utf-8") as f:
+            with open(rater_file, "r", encoding = "utf-8") as f:
                 previous_rater = int(f.read().strip())
+            with open(rater_file, "w", encoding = "utf-8") as f:
                 f.write(str(previous_rater + 1))
         else:
             with open(rater_file, "r", encoding = "utf-8") as f:
                 rater = f.read().strip()
-                
             with open(f"rater_{rater}_conversation_" + model_name + ".txt", "r", encoding = "utf-8") as f:
                 content = f.read()
                 conversation = ast.literal_eval(content)
@@ -147,7 +147,7 @@ def main():
     with open(rater_file, "r", encoding = "utf-8") as f:
         rater = f.read().strip()
 
-    if int(rater) < RATERS:
+    if int(rater) <= RATERS:
 
         metaphors_list = checkpoint_df["Metaphor"]
         structures_list = checkpoint_df["Met_structure"]
@@ -162,9 +162,10 @@ def main():
             conversation[-1]["content"][0]["text"] = metaphor
 
             completion = client.chat.completions.create(
-                model=MODEL,
-                messages=conversation
-                )
+                model = MODEL,
+                messages = conversation,
+                max_tokens = 10
+            )
 
             reply = completion.choices[0].message.content # content è un attributo dell'oggetto ChatCompletionOutputMessage
             print("output: ", reply)
